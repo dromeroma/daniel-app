@@ -40,6 +40,7 @@ dependencies:
 
   # Persistencia local de las transacciones (sobreviven a cerrar la app).
   shared_preferences: ^2.3.0
+  flutter_local_notifications: ^22.3.3
 
 dev_dependencies:
   flutter_test:

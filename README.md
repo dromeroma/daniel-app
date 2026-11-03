@@ -28,7 +28,32 @@ ATT: Daniel Felipe Madera Cavadía
 
 ## 2. Qué hace la aplicación
 
-**Pantalla 1 — Bienvenida**
+**Inicio de sesión**
+
+- La app abre siempre en un formulario de usuario y contraseña.
+- Credenciales: usuario `Daniel`, contraseña `Daniel22` (distinguen mayúsculas).
+- Al entrar se muestra el resumen de finanzas. **Cerrar sesión** está en el menú lateral.
+
+> Las credenciales están fijas en `lib/servicios/autenticacion.dart` porque la app no tiene
+> backend. Es suficiente para la actividad, pero no protege datos reales.
+
+**Mis Finanzas** (pantalla principal)
+
+- **Resumen:** ingresos, gastos, saldo y gráficos semanal, mensual y por categoría.
+- **Transacciones:** agregar, editar y eliminar ingresos y gastos.
+- **Actualizar datos:** nombre, correo y teléfono del usuario.
+- **Notificaciones:** bandeja de avisos, también accesible desde la campana.
+- Los montos aceptan el punto como separador de miles: `150.000` son ciento cincuenta mil.
+
+**Alertas y notificaciones**
+
+- Banner rojo en el resumen cuando el saldo es negativo o inferior a $ 50.000
+  (no aparece mientras no haya transacciones).
+- Cuando el saldo empeora se envía una notificación de Android y se guarda en la bandeja.
+  En Android 13 o superior hay que aceptar el permiso que se pide al iniciar sesión.
+- Mensajes breves al guardar, editar o eliminar.
+
+**Pantalla Bienvenida** (menú → *Acerca de*)
 
 - Icono que representa el desarrollo de aplicaciones móviles.
 - Título **«¡Bienvenido!»** y subtítulo **«Curso de Desarrollo de Apps»**.
@@ -41,7 +66,7 @@ ATT: Daniel Felipe Madera Cavadía
 - Botón **COMENZAR**.
 - Firma: *ATT: Daniel Felipe Madera Cavadía*.
 
-**Pantalla 2 — Mensaje**
+**Pantalla Mensaje** (botón COMENZAR)
 
 - Mensaje **«¡Hola! Esta es mi primera aplicación móvil.»**
 - Nombre del estudiante, curso, universidad y firma.
@@ -55,7 +80,7 @@ ATT: Daniel Felipe Madera Cavadía
   con `ConstrainedBox`, de modo que **no se produce overflow** en pantallas pequeñas ni
   cuando el usuario aumenta el tamaño de fuente del sistema.
 - Orientación bloqueada en vertical.
-- Icono de lanzador propio (vector adaptativo, sin paquetes externos).
+- Icono de lanzador propio (vector adaptativo).
 
 ---
 
@@ -73,14 +98,14 @@ ATT: Daniel Felipe Madera Cavadía
 
 ### Dependencias
 
-El proyecto **no usa ningún paquete externo**. Solo las dependencias que crea Flutter
-por defecto:
-
 ```yaml
 dependencies:
   flutter:
     sdk: flutter
   cupertino_icons: ^1.0.8
+  fl_chart: ^0.69.0                    # Gráficos
+  shared_preferences: ^2.3.0           # Guardado local
+  flutter_local_notifications: ^22.3.3 # Notificaciones de Android
 
 dev_dependencies:
   flutter_test:
@@ -88,7 +113,7 @@ dev_dependencies:
   flutter_lints: ^6.0.0
 ```
 
-Sin backend, sin base de datos, sin Firebase, sin APIs y sin autenticación.
+Sin backend, sin Firebase y sin APIs: todos los datos se guardan en el teléfono.
 
 ---
 
@@ -98,15 +123,27 @@ Sin backend, sin base de datos, sin Firebase, sin APIs y sin autenticación.
 bienvenida_apps/
 ├── lib/
 │   ├── main.dart                       # Punto de entrada de la app
-│   ├── datos_estudiante.dart           # ⭐ Todos los datos, parametrizados
-│   ├── tema.dart                       # Colores y tema Material 3
+│   ├── datos_estudiante.dart           # ⭐ Datos del estudiante
+│   ├── datos_finanzas.dart             # Categorías, colores e iconos
+│   ├── tema.dart                       # Colores, tema y límite de alerta
+│   ├── models/                         # Transacción y notificación
+│   ├── servicios/
+│   │   ├── autenticacion.dart          # Credenciales de acceso
+│   │   ├── finanzas_controlador.dart   # Transacciones y totales
+│   │   ├── perfil_controlador.dart     # Datos del usuario
+│   │   ├── notificaciones_controlador.dart # Bandeja y vigilancia del saldo
+│   │   └── notificaciones_sistema.dart # Notificaciones de Android
 │   ├── screens/
-│   │   ├── pantalla_bienvenida.dart    # Pantalla 1
-│   │   └── pantalla_mensaje.dart       # Pantalla 2
-│   └── widgets/
-│       ├── animacion_entrada.dart      # Fade + Slide + Scale reutilizable
-│       ├── tarjeta_estudiante.dart     # Tarjeta con nombre y programa
-│       └── fila_info.dart              # Fila "emoji + texto"
+│   │   ├── pantalla_login.dart         # Inicio de sesión
+│   │   ├── pantalla_finanzas.dart      # Contenedor con menú y campana
+│   │   ├── pantalla_resumen.dart       # Home: resumen de finanzas
+│   │   ├── pantalla_transacciones.dart # Lista de movimientos
+│   │   ├── pantalla_perfil.dart        # Actualizar datos
+│   │   ├── pantalla_notificaciones.dart # Bandeja de avisos
+│   │   ├── pantalla_bienvenida.dart    # Acerca de
+│   │   └── pantalla_mensaje.dart       # Mensaje del estudiante
+│   ├── utils/formato.dart              # Moneda, fechas y lectura de montos
+│   └── widgets/                        # Componentes reutilizables
 ├── android/                            # Proyecto Android nativo (Gradle)
 ├── test/
 │   └── widget_test.dart                # Pruebas automáticas
@@ -116,7 +153,7 @@ bienvenida_apps/
 
 ### Cómo cambiar los datos del estudiante
 
-Todo está centralizado en **`lib/datos_estudiante.dart`**. Basta con editar ese archivo:
+Están centralizados en **`lib/datos_estudiante.dart`**. Basta con editar ese archivo:
 
 ```dart
 static const String nombre = 'Daniel Felipe Madera Cavadía';
@@ -126,7 +163,7 @@ static const String universidad = 'Universidad de Cartagena';
 static const String actividad = 'Aplicación de bienvenida';
 ```
 
-No hay que tocar ningún otro archivo.
+El nombre también se puede cambiar dentro de la app, en *Actualizar datos*.
 
 ---
 
@@ -294,15 +331,19 @@ proyecto Android puro, útil para revisar el `AndroidManifest.xml` o los archivo
 ## 12. Comprobaciones de calidad
 
 ```bash
-flutter analyze   # Análisis estático: 0 errores, 0 warnings
-flutter test      # 3 pruebas automáticas, todas correctas
+flutter analyze   # Análisis estático
+flutter test      # Pruebas automáticas
 ```
 
 Las pruebas de `test/widget_test.dart` verifican:
 
-1. Que la pantalla de bienvenida muestra el nombre, el programa, la universidad y la firma.
-2. Que el botón **COMENZAR** navega a la segunda pantalla y que se puede volver atrás.
-3. Que **no se producen desbordamientos (overflow)** en una pantalla pequeña de 320×480.
+1. El inicio de sesión: credenciales correctas, incorrectas, campos vacíos y cierre de sesión.
+2. Agregar, editar y eliminar transacciones, y la lectura de montos.
+3. Las alertas de saldo, las notificaciones y la bandeja.
+4. La actualización de datos del usuario.
+5. La pantalla de bienvenida y su navegación.
+6. Que **no se producen desbordamientos (overflow)** en una pantalla de 320×480 ni con el
+   teclado abierto en el formulario de transacciones.
 
 ---
 

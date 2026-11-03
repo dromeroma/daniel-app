@@ -5,16 +5,18 @@ import '../models/transaccion.dart';
 import '../tema.dart';
 import '../utils/formato.dart';
 
-/// Fila de la lista de transacciones, con botón para eliminar (pide
-/// confirmación antes de borrar).
+/// Fila de la lista de transacciones, con botones para editar y para
+/// eliminar (pide confirmación antes de borrar).
 class ItemTransaccion extends StatelessWidget {
   const ItemTransaccion({
     super.key,
     required this.transaccion,
+    required this.onEditar,
     required this.onEliminar,
   });
 
   final Transaccion transaccion;
+  final VoidCallback onEditar;
   final VoidCallback onEliminar;
 
   @override
@@ -84,13 +86,24 @@ class ItemTransaccion extends StatelessWidget {
                   fontSize: 13.5,
                 ),
               ),
-              IconButton(
-                onPressed: () => _confirmarEliminar(context),
-                icon: const Icon(Icons.delete_outline, size: 20),
-                color: Tema.textoSuave,
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(),
-                visualDensity: VisualDensity.compact,
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  IconButton(
+                    onPressed: onEditar,
+                    tooltip: 'Editar',
+                    icon: const Icon(Icons.edit_outlined, size: 20),
+                    color: Tema.textoSuave,
+                    visualDensity: VisualDensity.compact,
+                  ),
+                  IconButton(
+                    onPressed: () => _confirmarEliminar(context),
+                    tooltip: 'Eliminar',
+                    icon: const Icon(Icons.delete_outline, size: 20),
+                    color: Tema.textoSuave,
+                    visualDensity: VisualDensity.compact,
+                  ),
+                ],
               ),
             ],
           ),

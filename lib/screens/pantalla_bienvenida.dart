@@ -25,6 +25,13 @@ class PantallaBienvenida extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      // AppBar transparente: da el botón de volver al abrirse desde el menú.
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        foregroundColor: Colors.white,
+      ),
+      extendBodyBehindAppBar: true,
       body: Container(
         // Degradado que ocupa toda la pantalla.
         decoration: const BoxDecoration(gradient: Tema.fondo),

@@ -5,24 +5,13 @@ import '../tema.dart';
 import '../widgets/formulario_transaccion.dart';
 import '../widgets/item_transaccion.dart';
 
-/// Lista de transacciones registradas, con botón flotante para agregar
-/// una nueva y opción de eliminar en cada fila.
+/// Lista de transacciones registradas, con opciones de editar y eliminar
+/// en cada fila. El botón para agregar está en [PantallaFinanzas]: ese
+/// Scaffold es el que muestra los SnackBar y así estos no lo tapan.
 class PantallaTransacciones extends StatelessWidget {
   const PantallaTransacciones({super.key, required this.controlador});
 
   final FinanzasControlador controlador;
-
-  void _abrirFormulario(BuildContext context) {
-    showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (_) => FormularioTransaccion(controlador: controlador),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -31,27 +20,28 @@ class PantallaTransacciones extends StatelessWidget {
       builder: (context, _) {
         final transacciones = controlador.transacciones;
 
-        return Scaffold(
-          backgroundColor: Colors.transparent,
-          floatingActionButton: FloatingActionButton.extended(
-            onPressed: () => _abrirFormulario(context),
-            backgroundColor: Tema.violeta,
-            icon: const Icon(Icons.add),
-            label: const Text('Agregar'),
-          ),
-          body: transacciones.isEmpty
-              ? _estadoVacio()
-              : ListView.builder(
-                  padding: const EdgeInsets.fromLTRB(18, 18, 18, 90),
-                  itemCount: transacciones.length,
-                  itemBuilder: (context, i) {
-                    final t = transacciones[i];
-                    return ItemTransaccion(
-                      transaccion: t,
-                      onEliminar: () => controlador.eliminar(t.id),
-                    );
-                  },
-                ),
+        if (transacciones.isEmpty) return _estadoVacio();
+
+        return ListView.builder(
+          padding: const EdgeInsets.fromLTRB(18, 18, 18, 90),
+          itemCount: transacciones.length,
+          itemBuilder: (context, i) {
+            final t = transacciones[i];
+            return ItemTransaccion(
+              transaccion: t,
+              onEditar: () => abrirFormularioTransaccion(
+                context,
+                controlador,
+                transaccion: t,
+              ),
+              onEliminar: () {
+                controlador.eliminar(t.id);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Transacción eliminada')),
+                );
+              },
+            );
+          },
         );
       },
     );

@@ -7,6 +7,9 @@ import '../models/transaccion.dart';
 import '../tema.dart';
 import '../utils/formato.dart';
 
+/// Estado del saldo frente al límite recomendado.
+enum NivelSaldo { normal, bajo, negativo }
+
 /// Un punto de datos para el gráfico comparativo (ingresos vs. gastos)
 /// en una unidad de tiempo (un día o un mes).
 class PuntoComparativo {
@@ -42,28 +45,41 @@ class FinanzasControlador extends ChangeNotifier {
 
   double get saldo => totalIngresos - totalGastos;
 
+  /// Una cuenta sin movimientos no está en alerta: aún no hay saldo que
+  /// vigilar.
+  NivelSaldo get nivelSaldo {
+    if (_transacciones.isEmpty) return NivelSaldo.normal;
+    if (saldo < 0) return NivelSaldo.negativo;
+    if (saldo < Tema.limiteAlertaSaldo) return NivelSaldo.bajo;
+    return NivelSaldo.normal;
+  }
+
   /// Se activa con saldo negativo o por debajo del límite recomendado.
-  bool get enAlerta => saldo < Tema.limiteAlertaSaldo;
+  bool get enAlerta => nivelSaldo != NivelSaldo.normal;
 
   double _sumar(TipoTransaccion tipo) => _transacciones
       .where((t) => t.tipo == tipo)
       .fold(0.0, (suma, t) => suma + t.monto);
 
   /// Carga las transacciones guardadas en el dispositivo. Debe llamarse
-  /// una vez antes de mostrar la interfaz.
+  /// una vez antes de mostrar la interfaz. Un registro dañado se ignora
+  /// para que no impida abrir la app.
   Future<void> cargar() async {
     final prefs = await SharedPreferences.getInstance();
     final guardadas = prefs.getStringList(_clavePreferencia) ?? [];
     _transacciones
       ..clear()
-      ..addAll(
-        guardadas.map(
-          (texto) => Transaccion.fromJson(
-            jsonDecode(texto) as Map<String, dynamic>,
-          ),
-        ),
-      );
+      ..addAll(guardadas.map(_leerTransaccion).whereType<Transaccion>());
     notifyListeners();
+  }
+
+  Transaccion? _leerTransaccion(String texto) {
+    try {
+      return Transaccion.fromJson(jsonDecode(texto) as Map<String, dynamic>);
+    } catch (error) {
+      debugPrint('Transacción guardada ignorada: $error');
+      return null;
+    }
   }
 
   Future<void> _guardar() async {
@@ -76,6 +92,14 @@ class FinanzasControlador extends ChangeNotifier {
 
   Future<void> agregar(Transaccion transaccion) async {
     _transacciones.add(transaccion);
+    notifyListeners();
+    await _guardar();
+  }
+
+  Future<void> actualizar(Transaccion transaccion) async {
+    final indice = _transacciones.indexWhere((t) => t.id == transaccion.id);
+    if (indice < 0) return;
+    _transacciones[indice] = transaccion;
     notifyListeners();
     await _guardar();
   }
