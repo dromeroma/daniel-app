@@ -35,6 +35,12 @@ dependencies:
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
 
+  # Gráficos de barras y de dona del módulo de finanzas.
+  fl_chart: ^0.69.0
+
+  # Persistencia local de las transacciones (sobreviven a cerrar la app).
+  shared_preferences: ^2.3.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

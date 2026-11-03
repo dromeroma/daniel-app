@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import 'datos_estudiante.dart';
-import 'screens/pantalla_bienvenida.dart';
+import 'screens/pantalla_finanzas.dart';
+import 'servicios/finanzas_controlador.dart';
 import 'tema.dart';
 
 /// Punto de entrada de la aplicación.
-void main() {
-  // Necesario antes de llamar a SystemChrome.
+void main() async {
+  // Necesario antes de llamar a SystemChrome y de leer SharedPreferences.
   WidgetsFlutterBinding.ensureInitialized();
 
   // La actividad pide orientación vertical: se bloquea el giro.
@@ -23,20 +23,27 @@ void main() {
     statusBarIconBrightness: Brightness.light,
   ));
 
-  runApp(const AppBienvenida());
+  // Se cargan las transacciones guardadas antes de mostrar la interfaz,
+  // para que el dashboard nunca se muestre vacío por un instante.
+  final controlador = FinanzasControlador();
+  await controlador.cargar();
+
+  runApp(AppFinanzas(controlador: controlador));
 }
 
 /// Widget raíz de la aplicación.
-class AppBienvenida extends StatelessWidget {
-  const AppBienvenida({super.key});
+class AppFinanzas extends StatelessWidget {
+  const AppFinanzas({super.key, required this.controlador});
+
+  final FinanzasControlador controlador;
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: DatosEstudiante.curso,
+      title: 'Mis Finanzas',
       debugShowCheckedModeBanner: false,
       theme: Tema.datos,
-      home: const PantallaBienvenida(),
+      home: PantallaFinanzas(controlador: controlador),
     );
   }
 }
